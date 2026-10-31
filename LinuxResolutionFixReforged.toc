@@ -11,9 +11,11 @@
 ## Notes-koKR: 일부 리눅스 시스템에서 잘못된 창 모드 해상도를 감지하고 수정합니다.
 ## Notes-zhCN: 检测并修复部分 Linux 系统上错误的窗口分辨率。
 ## Notes-zhTW: 偵測並修正部分 Linux 系統上錯誤的視窗解析度。
-## Author: Nicolas (based on LinuxResolutionFix by maqisha)
+## Author: Braincell1980 (based on LinuxResolutionFix by maqisha)
 ## Version: 1.1.0
 ## IconTexture: Interface\Icons\INV_Misc_EngGizmos_17
+## X-License: MIT
+## X-Curse-Project-ID: 1721219
 
 Locales.lua
 LinuxResolutionFixReforged.lua

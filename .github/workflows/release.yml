@@ -1,0 +1,81 @@
+# Publishes a new version of Linux Resolution Fix Reforged with the BigWigs packager
+# (https://github.com/BigWigsMods/packager):
+#   1. builds the zip (files left out are listed in .pkgmeta);
+#   2. creates the GitHub release with the zip, and uploads the zip to CurseForge and Wago
+#      (project IDs in LinuxResolutionFixReforged.toc: ## X-Curse-Project-ID, ## X-Wago-ID),
+#      with this version's section of CHANGELOG.md as release notes.
+#
+# Two ways to start it:
+#   - "Run workflow" in the Actions tab: the version is read from the .toc (## Version),
+#     the tag v<version> is created, then everything above runs. Nothing else to do.
+#   - pushing a tag yourself (e.g. v1.2.0).
+# The CurseForge file type comes from the tag: "alpha" -> Alpha, "beta" -> Beta, anything
+# else (v1.2.0, v1.2.0-rc1...) -> Release.
+# Needs two repository secrets: CF_API_KEY (CurseForge API token) and WAGO_API_TOKEN
+# (Wago Addons API key). Without one of them, that site is skipped, the others still get the zip.
+name: Package and release
+
+on:
+  push:
+    tags:
+      - "**"
+  workflow_dispatch:
+
+permissions:
+  contents: write # lets the job create the tag and the GitHub release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+      WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Get the code (with history, for the changelog)
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # The release stops here if the code has a problem: nothing is tagged or uploaded
+      - name: Check the code
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lua-check >/dev/null
+          luacheck .
+
+      # Notes of this version only (its section of CHANGELOG.md), used as release notes
+      # on GitHub, CurseForge and Wago (.pkgmeta). Checked before the tag is created, so a
+      # missing section never leaves a tag behind.
+      - name: Release notes of this version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            version=$(grep -m1 '^## Version:' LinuxResolutionFixReforged.toc | sed 's/^## Version:[[:space:]]*//' | tr -d '\r')
+          else
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          awk -v v="## ${version} " 'index($0, v) == 1 { on = 1; print; next } on && /^## / { exit } on { print }' \
+            CHANGELOG.md > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "::error::CHANGELOG.md has no section '## ${version} — ...': write the notes first."
+            exit 1
+          fi
+          echo "Notes of ${version}:"; cat RELEASE_NOTES.md
+
+      # "Run workflow": create the tag of the version written in the .toc
+      - name: Create the version tag
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          version=$(grep -m1 '^## Version:' LinuxResolutionFixReforged.toc | sed 's/^## Version:[[:space:]]*//' | tr -d '\r')
+          tag="v${version}"
+          if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+            echo "::error::The tag ${tag} already exists: change ## Version in the .toc first."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${tag}" -m "Linux Resolution Fix Reforged ${version}"
+          git push origin "${tag}"
+          echo "Created ${tag}"
+
+      - name: Package and upload
+        uses: BigWigsMods/packager@v2

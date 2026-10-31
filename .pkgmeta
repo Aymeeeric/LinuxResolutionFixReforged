@@ -1,0 +1,16 @@
+# CurseForge / Wago / BigWigs packager: what goes into the release zip
+package-as: LinuxResolutionFixReforged
+
+ignore:
+    - .github
+    - .luacheckrc
+    - .pkgmeta
+    - .gitignore
+    - CHANGELOG.md
+    - RELEASE_NOTES.md
+
+# Release notes on GitHub, CurseForge and Wago: the section of CHANGELOG.md for the version
+# being released, written to RELEASE_NOTES.md by the release workflow
+manual-changelog:
+    filename: RELEASE_NOTES.md
+    markup-type: markdown
