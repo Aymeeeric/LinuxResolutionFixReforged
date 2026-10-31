@@ -1,0 +1,19 @@
+## Interface: 120100, 120105, 120001, 50504, 20506, 16001, 11509, 11508
+## Title: Linux Resolution Fix Reforged
+## Notes: Detects and fixes an incorrect windowed resolution on some Linux systems.
+## Notes-frFR: Détecte et corrige une résolution fenêtrée incorrecte sur certains systèmes Linux.
+## Notes-deDE: Erkennt und korrigiert eine falsche Fensterauflösung auf manchen Linux-Systemen.
+## Notes-esES: Detecta y corrige una resolución de ventana incorrecta en algunos sistemas Linux.
+## Notes-esMX: Detecta y corrige una resolución de ventana incorrecta en algunos sistemas Linux.
+## Notes-itIT: Rileva e corregge una risoluzione in finestra errata su alcuni sistemi Linux.
+## Notes-ptBR: Detecta e corrige uma resolução em janela incorreta em alguns sistemas Linux.
+## Notes-ruRU: Обнаруживает и исправляет неверное оконное разрешение в некоторых системах Linux.
+## Notes-koKR: 일부 리눅스 시스템에서 잘못된 창 모드 해상도를 감지하고 수정합니다.
+## Notes-zhCN: 检测并修复部分 Linux 系统上错误的窗口分辨率。
+## Notes-zhTW: 偵測並修正部分 Linux 系統上錯誤的視窗解析度。
+## Author: Nicolas (based on LinuxResolutionFix by maqisha)
+## Version: 1.1.0
+## IconTexture: Interface\Icons\INV_Misc_EngGizmos_17
+
+Locales.lua
+LinuxResolutionFixReforged.lua
