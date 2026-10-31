@@ -1,4 +1,4 @@
-## Interface: 120100, 120105, 120001, 50504, 20506, 16001, 11509, 11508
+## Interface: 120105, 120107, 120001, 50504, 20506, 16001, 11509, 11508
 ## Title: Linux Resolution Fix Reforged
 ## Notes: Detects and fixes an incorrect windowed resolution on some Linux systems.
 ## Notes-frFR: Détecte et corrige une résolution fenêtrée incorrecte sur certains systèmes Linux.
