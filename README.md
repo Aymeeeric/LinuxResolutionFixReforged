@@ -16,6 +16,11 @@ On some Linux setups (Wine / Proton / Lutris / Heroic, GNOME, Wayland…):
 
 The addon detects step 3 at login and shows a **Fix Resolution** button that applies the right size in one click.
 
+When `gxMaximize` is enabled, the button briefly switches to a smaller window before
+restoring fullscreen at the target resolution. This handles setups where resizing
+alone leaves the desktop's top bar visible. The operation takes about two seconds;
+the addon then reports whether the target resolution was reached.
+
 ## Features
 
 - **All official clients**: Midnight (Retail), Mists of Pandaria Classic, Burning Crusade Classic, Classic Era / Anniversary, WoW: Forever, plus their test realms. The addon picks the available API at runtime; if a client lacks it, the addon prints a message and stays inactive.

@@ -3,6 +3,7 @@ local addonName, ns = ...
 local L = ns.L
 
 local LOGIN_CHECK_DELAY = 1.5
+local WINDOW_TRANSITION_DELAY = 1
 local PREFIX = "|cff33ff99Linux Resolution Fix Reforged|r: "
 
 local function Print(message)
@@ -112,8 +113,12 @@ local function GetCurrent()
     return Round(width), Round(height)
 end
 
+local applying = false
+
 -- Returns true when the resolution is correct.
 local function CheckResolution()
+    -- Ignore resize events from the temporary windowed stage.
+    if applying then return false end
     if not backend then return true end
 
     local width, height = GetCurrent()
@@ -136,10 +141,59 @@ local function CheckResolution()
 end
 
 local function ApplyResolution()
+    if applying or not backend then return end
+    -- Capture the native size before temporarily resizing the window.
     local width, height = backend.GetTarget()
     if not width then return end
-    backend.Apply(width, height)
-    After(1, CheckResolution)
+
+    local resetFullscreen = GetCVar("gxMaximize") == "1"
+        and (UpdateWindow or RestartGx)
+    applying = true
+    button:Disable()
+    button:SetText(L.APPLYING)
+
+    local function Finish()
+        applying = false
+        button:Enable()
+        button:SetText(L.FIX_BUTTON)
+        local correct, actualWidth, actualHeight = CheckResolution()
+        if correct and actualWidth then
+            Print(L.OK:format(actualWidth, actualHeight))
+        elseif actualWidth then
+            Print(L.UNCHANGED:format(actualWidth, actualHeight))
+        end
+    end
+
+    local function RestoreFullscreen()
+        if resetFullscreen then SetCVar("gxMaximize", "1") end
+        backend.Apply(width, height)
+    end
+
+    local function RestoreAndCheck()
+        local ok, err = pcall(RestoreFullscreen)
+        if not ok then
+            Print(L.APPLY_ERROR .. tostring(err))
+            -- Best effort: never intentionally leave the game in the small window.
+            if resetFullscreen then
+                pcall(SetCVar, "gxMaximize", "1")
+                pcall(UpdateWindow or RestartGx)
+            end
+        end
+        After(WINDOW_TRANSITION_DELAY, Finish)
+    end
+
+    if resetFullscreen then
+        -- Reproduce the working manual windowed -> fullscreen transition.
+        -- Give the window manager a distinct windowed size before restoring fullscreen.
+        local ok, err = pcall(function()
+            SetCVar("gxMaximize", "0")
+            backend.Apply(Round(width * 0.8), Round(height * 0.8))
+        end)
+        if not ok then Print(L.APPLY_ERROR .. tostring(err)) end
+        After(WINDOW_TRANSITION_DELAY, RestoreAndCheck)
+    else
+        RestoreAndCheck()
+    end
 end
 
 button:SetScript("OnClick", ApplyResolution)

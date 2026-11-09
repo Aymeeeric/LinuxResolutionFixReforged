@@ -7,6 +7,9 @@ local L = {
     TARGET     = "Target: %dx%d",
     NO_API     = "this version of WoW does not provide the required functions; the addon is disabled.",
     OK         = "resolution is correct (%dx%d).",
+    APPLYING   = "Applying fullscreen...",
+    UNCHANGED  = "the resolution is still %dx%d; the fullscreen change did not work.",
+    APPLY_ERROR = "could not change the display: ",
 }
 
 local translations = {
@@ -16,6 +19,9 @@ local translations = {
         TARGET     = "Cible : %dx%d",
         NO_API     = "cette version de WoW ne fournit pas les fonctions nécessaires ; l'addon est désactivé.",
         OK         = "la résolution est correcte (%dx%d).",
+        APPLYING   = "Passage en plein écran…",
+        UNCHANGED  = "la résolution reste à %dx%d ; le passage en plein écran n'a pas fonctionné.",
+        APPLY_ERROR = "impossible de modifier l'affichage : ",
     },
     deDE = {
         FIX_BUTTON = "Auflösung korrigieren",
