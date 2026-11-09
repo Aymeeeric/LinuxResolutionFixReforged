@@ -51,7 +51,11 @@ local modernBackend = {
     end,
     Apply = function(width, height)
         C_VideoOptions.SetGameWindowSize(width, height)
-        if UpdateWindow then UpdateWindow() end
+        if UpdateWindow then
+            UpdateWindow()
+        elseif RestartGx then
+            RestartGx()
+        end
     end,
 }
 
@@ -116,13 +120,13 @@ end
 local applying = false
 
 -- Returns true when the resolution is correct.
-local function CheckResolution()
+local function CheckResolution(targetWidth, targetHeight)
     -- Ignore resize events from the temporary windowed stage.
     if applying then return false end
     if not backend then return true end
 
     local width, height = GetCurrent()
-    local targetWidth, targetHeight = backend.GetTarget()
+    if not targetWidth then targetWidth, targetHeight = backend.GetTarget() end
     if not targetWidth then
         button:Hide()
         return true
@@ -146,8 +150,10 @@ local function ApplyResolution()
     local width, height = backend.GetTarget()
     if not width then return end
 
-    local resetFullscreen = GetCVar("gxMaximize") == "1"
-        and (UpdateWindow or RestartGx)
+    -- Some older clients do not expose this CVar; keep the resize-only fallback.
+    local hasMaximize, maximize = pcall(GetCVar, "gxMaximize")
+    local updateWindow = UpdateWindow or RestartGx
+    local resetFullscreen = hasMaximize and maximize == "1" and SetCVar and updateWindow
     applying = true
     button:Disable()
     button:SetText(L.APPLYING)
@@ -156,11 +162,14 @@ local function ApplyResolution()
         applying = false
         button:Enable()
         button:SetText(L.FIX_BUTTON)
-        local correct, actualWidth, actualHeight = CheckResolution()
-        if correct and actualWidth then
+        -- Compare with the captured target, even if the API now reports a different default.
+        local ok, correct, actualWidth, actualHeight = pcall(CheckResolution, width, height)
+        if not ok then
+            Print(L.APPLY_ERROR:format(tostring(correct)))
+        elseif correct and actualWidth then
             Print(L.OK:format(actualWidth, actualHeight))
         elseif actualWidth then
-            Print(L.UNCHANGED:format(actualWidth, actualHeight))
+            Print(L.FAILED:format(actualWidth, actualHeight, width, height))
         end
     end
 
@@ -172,11 +181,13 @@ local function ApplyResolution()
     local function RestoreAndCheck()
         local ok, err = pcall(RestoreFullscreen)
         if not ok then
-            Print(L.APPLY_ERROR .. tostring(err))
-            -- Best effort: never intentionally leave the game in the small window.
+            Print(L.APPLY_ERROR:format(tostring(err)))
+            -- Retry mode and size independently: a failed mode change must not
+            -- prevent restoring the original target size. Recovery is best effort.
             if resetFullscreen then
                 pcall(SetCVar, "gxMaximize", "1")
-                pcall(UpdateWindow or RestartGx)
+                local restoredSize = pcall(backend.Apply, width, height)
+                if not restoredSize then pcall(updateWindow) end
             end
         end
         After(WINDOW_TRANSITION_DELAY, Finish)
@@ -189,7 +200,7 @@ local function ApplyResolution()
             SetCVar("gxMaximize", "0")
             backend.Apply(Round(width * 0.8), Round(height * 0.8))
         end)
-        if not ok then Print(L.APPLY_ERROR .. tostring(err)) end
+        if not ok then Print(L.APPLY_ERROR:format(tostring(err))) end
         After(WINDOW_TRANSITION_DELAY, RestoreAndCheck)
     else
         RestoreAndCheck()
